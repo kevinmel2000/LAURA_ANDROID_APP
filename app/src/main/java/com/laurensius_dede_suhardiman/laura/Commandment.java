@@ -1,5 +1,6 @@
 package com.laurensius_dede_suhardiman.laura;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -12,10 +13,19 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.laurensius_dede_suhardiman.laura.AppController.AppController;
 import com.skyfishjy.library.RippleBackground;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class Commandment extends AppCompatActivity implements RecognitionListener, TextToSpeech.OnInitListener{
 
@@ -27,6 +37,7 @@ public class Commandment extends AppCompatActivity implements RecognitionListene
     private Intent recognizerIntent;
     private String LOG_TAG = "~~>LAURA";
     private TextToSpeech tts;
+    private String url;
 
     private boolean isListening = false;
 
@@ -35,16 +46,14 @@ public class Commandment extends AppCompatActivity implements RecognitionListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_commandment);
-
+        url = getResources().getString(R.string.url_control);
         recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, Locale.getDefault());
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,this.getPackageName());
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
-
         rbRippleFx =(RippleBackground)findViewById(R.id.rb_ripplefx);
         ivMic =(ImageView)findViewById(R.id.iv_mic);
         tvReceivedComamnd = (TextView)findViewById(R.id.tv_receivedcommand);
-
         ivMic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -238,11 +247,65 @@ public class Commandment extends AppCompatActivity implements RecognitionListene
             if(text.equals(array_instruction[x].toLowerCase())){
                 tvReceivedComamnd.setText(array_response[x]);
                 speakOut(tvReceivedComamnd.getText().toString());
+                switch (x){
+                    case 4 :
+                        doInstruction("1","1");
+                        break;
+                    case 5 :
+                        doInstruction("1","0");
+                        break;
+                    case 6 :
+                        doInstruction("2","1");
+                        break;
+                    case 7 :
+                        doInstruction("2","0");
+                        break;
+                    case 8 :
+                        doInstruction("1","1");
+                        doInstruction("2","1");
+                        break;
+                    case 9 :
+                        doInstruction("1","0");
+                        doInstruction("2","0");
+                        break;
+                    default:
+
+                        break;
+                }
             }
             Log.d(LOG_TAG,"ON MATCHING");
         }
         tvReceivedComamnd.setText("");
     }
 
+
+    private void doInstruction(String id,String state) {
+        String tag_login = "request_login";
+        //final ProgressDialog pDialog = new ProgressDialog(this);
+        //pDialog.setMessage("Loading . . . ");
+        //pDialog.show();
+        Log.d(LOG_TAG,"Loading send instruction");
+        final Map<String,String> params = new HashMap<String,String>();
+        params.put("id", id);
+        params.put("state", state);
+        JSONObject parameter = new JSONObject(params);
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, parameter,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+          //              pDialog.dismiss();
+                        Log.d(LOG_TAG,"Instruction sent");
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+            //            pDialog.dismiss();
+
+                        Log.d(LOG_TAG,"Instruction error");
+                    }
+                });
+        AppController.getInstance().addToRequestQueue(jsonObjectRequest, tag_login);
+    }
 
 }
