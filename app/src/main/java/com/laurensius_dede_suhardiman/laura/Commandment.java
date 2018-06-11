@@ -10,8 +10,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -20,6 +22,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.laurensius_dede_suhardiman.laura.AppController.AppController;
 import com.skyfishjy.library.RippleBackground;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -46,6 +49,7 @@ public class Commandment extends AppCompatActivity implements RecognitionListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_commandment);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         url = getResources().getString(R.string.url_control);
         recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, Locale.getDefault());
@@ -141,7 +145,8 @@ public class Commandment extends AppCompatActivity implements RecognitionListene
         }else{
             stopListening();
             shutdownCommander();
-            tvReceivedComamnd.setText(errorMessage);
+            //tvReceivedComamnd.setText(errorMessage);
+            Log.d(LOG_TAG,errorMessage);
         }
 
     }
@@ -248,6 +253,15 @@ public class Commandment extends AppCompatActivity implements RecognitionListene
                 tvReceivedComamnd.setText(array_response[x]);
                 speakOut(tvReceivedComamnd.getText().toString());
                 switch (x){
+                    case 1 :
+                        stopListening();
+                        shutdownCommander();
+                        break;
+                    case 2 :
+                        stopListening();
+                        shutdownCommander();
+                        finish();
+                        break;
                     case 4 :
                         doInstruction("1","1");
                         break;
@@ -269,7 +283,6 @@ public class Commandment extends AppCompatActivity implements RecognitionListene
                         doInstruction("2","0");
                         break;
                     default:
-
                         break;
                 }
             }
@@ -293,7 +306,14 @@ public class Commandment extends AppCompatActivity implements RecognitionListene
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-          //              pDialog.dismiss();
+                        try{
+                            Toast.makeText(Commandment.this,"Success",Toast.LENGTH_SHORT).show();
+                            String data = response.getString("data");
+                            String message = response.getString("message");
+                            Toast.makeText(Commandment.this,data,Toast.LENGTH_SHORT).show();
+                            Toast.makeText(Commandment.this,message,Toast.LENGTH_SHORT).show();
+                        }catch (JSONException e){
+                        }
                         Log.d(LOG_TAG,"Instruction sent");
                     }
                 },
@@ -301,7 +321,7 @@ public class Commandment extends AppCompatActivity implements RecognitionListene
                     @Override
                     public void onErrorResponse(VolleyError error) {
             //            pDialog.dismiss();
-
+                        Toast.makeText(Commandment.this,"Error",Toast.LENGTH_SHORT).show();
                         Log.d(LOG_TAG,"Instruction error");
                     }
                 });
